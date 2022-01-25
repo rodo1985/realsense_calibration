@@ -173,7 +173,7 @@ def main():
                     if EnableTcpServer:
                         # Esperamos la pose del robot
                         robot_pose = tcp.waitForPose()
-                        robot_pose = np.array(robot_pose.split(','), float)
+                        robot_pose = np.array(robot_pose.split(',q'), float)
                         robot_pose[0:3] = robot_pose[0:3] * 1000
                         robot_poses.append([robot_pose[0], robot_pose[1], robot_pose[2], robot_pose[3],robot_pose[4],robot_pose[5]])
 
@@ -185,36 +185,36 @@ def main():
                         if point[0] != 0 and point[1] != 0 and point[2] != 0:
                             coord.append(point)
 
-                    plane = Plane.best_fit(np.array(coord))
-                    rot_x = math.acos(plane.normal[0]) + math.pi/2
-                    rot_y = math.acos(plane.normal[1]) - math.pi/2
-                    rot_z = math.pi / 2 + rvects[2][0]
-
-
-                    euler = R.from_euler('xyz', [rot_x, rot_y, rot_z], degrees=False)
-                    quaternion = euler.as_quat()
-
-                    if hand_eye:
+                    if(len(coord) > 2):
+                        plane = Plane.best_fit(np.array(coord))
+                        rot_x = math.acos(plane.normal[0]) + math.pi/2
+                        rot_y = math.acos(plane.normal[1]) - math.pi/2
+                        rot_z = math.pi / 2 + rvects[2][0]
                         
-                        transform = np.eye(3)
-                        transform[:3, :3] = euler.inv().as_matrix()
+                        euler = R.from_euler('xyz', [rot_x, rot_y, rot_z], degrees=False)
+                        quaternion = euler.as_quat()
 
-                        p = np.array([coord[0][0], coord[0][1], coord[0][2]]) * -1
+                        if hand_eye:
+                            
+                            transform = np.eye(3)
+                            transform[:3, :3] = euler.inv().as_matrix()
 
-                        transformed_point = np.dot(p, transform)
+                            p = np.array([coord[0][0], coord[0][1], coord[0][2]]) * -1
 
-                        camposes.append([transformed_point[0], transformed_point[1], transformed_point[2], quaternion[3], quaternion[0], quaternion[1], quaternion[2]
+                            transformed_point = np.dot(p, transform)
+
+                            camposes.append([transformed_point[0], transformed_point[1], transformed_point[2], quaternion[3], quaternion[0], quaternion[1], quaternion[2]
+                                            ])
+                        else:
+                            camposes.append([coord[0][0], coord[0][1], coord[0][2], quaternion[3], quaternion[0], quaternion[1], quaternion[2]
                                         ])
-                    else:
-                        camposes.append([coord[0][0], coord[0][1], coord[0][2], quaternion[3], quaternion[0], quaternion[1], quaternion[2]
-                                    ])
 
-                    if not EnableTcpServer:
-                        print(camposes[len(camposes)-1])
+                        if not EnableTcpServer:
+                            print(camposes[len(camposes)-1])
+                    else:
+                        print('Not enough coordinates')
 
                     bg_removed = img
-
-
 
                 cv2.namedWindow('Align Example', cv2.WINDOW_AUTOSIZE)
                 cv2.imshow('Align Example', bg_removed)

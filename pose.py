@@ -18,6 +18,7 @@ def main():
 
     # Streaming loop
     while True:
+        
         # get frame
         aligned_depth_frame, aligned_color_image = rs.wait_for_frame()
 
@@ -38,9 +39,6 @@ def main():
                 plane = Plane.best_fit(np.array(coord))
 
                 camera_point = np.array([point[0], point[1], point[2]])
-                rot_x = math.acos(plane.normal[0]) + math.pi/2
-                rot_y = math.acos(plane.normal[1]) - math.pi/2
-                rot_z = math.pi / 2 + rvects[2][0]
 
                 # calibration
                 t_cam_flange = np.array([5.68945, -18.2781, 178.771])
